@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="style.css" />
+    <title>Library</title>
+  </head>
+  <body>
+    <main>
+      <button class="new-book">+ New Book</button>
+      <div class="book-template">
+        <div class="book-info">
+          <p class="title">The Hobbit</p>
+          <p class="author">J.R.R. Tolkien</p>
+          <p class="pages">295</p>
+          <p class="read">Read</p>
+        </div>
+        <button class="delete-book">x</button>
+      </div>
+      <div class="book-container"></div>
+    </main>
+    <dialog id="addBookDialog">
+      <form method="dialog">
+        <label for="book-title">
+          Title: <input type="text" name="book-title" id="book-title" />
+        </label>
+
+        <label for="book-author">
+          Author: <input type="text" name="book-author" id="book-author" />
+        </label>
+
+        <label for="book-pages">
+          Pages: <input type="number" name="book-pages" id="book-pages" />
+        </label>
+
+        <label for="book-read">
+          <input type="checkbox" name="book-read" id="book-read" /> Read?
+        </label>
+
+        <div class="buttons">
+          <button type="button" id="close-modal">Cancel</button>
+          <button type="submit" id="submit-modal">Confirm</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
