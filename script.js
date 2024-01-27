@@ -3,13 +3,12 @@ let main = document.querySelector(".book-container");
 let dialog = document.querySelector("#addBookDialog");
 let addBookButton = document.querySelector(".new-book");
 let form = document.querySelector("form");
-let deleteBook = document.querySelectorAll(".delete-book");
 let closeModal = document.querySelector("#close-modal");
 let myLibrary = [];
 addBookButton.addEventListener("click", () => {
     dialog.showModal();
 });
-closeModal.addEventListener("click", (e) => {
+closeModal.addEventListener("click", (_) => {
     dialog.close();
 });
 form.addEventListener("submit", processBook);
@@ -34,8 +33,10 @@ function processBook(evt) {
     const pages = Number(getInputElementValue("#book-pages"));
     const read = getCheckedElementBool("#book-read");
     const book = new Book(title, author, pages, read);
-    addBookToLibrary([book]);
-    displayLibrary();
+    if (!checkRenderedBooks(book)) {
+        addBookToLibrary([book]);
+        displayLibrary();
+    }
     dialog.close();
 }
 function getInputElementValue(selector) {
@@ -49,60 +50,61 @@ function getCheckedElementBool(selector) {
 function addBookToLibrary(books) {
     myLibrary = [...myLibrary, ...books];
 }
-function getDropdownWidget(readStatus) {
-    let dropdownContainer = document.createElement("div");
-    dropdownContainer.className = "select";
-    let statuses = ["To Read", "Read", "Currently Reading"];
-    let dropdown = document.createElement("select");
-    for (let [index] of statuses.entries()) {
-        let option = document.createElement("option");
-        option.value = statuses[index];
-        option.text = statuses[index];
-        dropdown.appendChild(option);
+// prettier-ignore
+function createSelectDropdownWidget(readStatus) {
+    const statuses = ["To Read", "Read", "Currently Reading"];
+    const selectedIndex = readStatus ? 1 : 0;
+    const optionsHTML = statuses
+        .map((status, index) => `<option value="${status}" ${index === selectedIndex ? "selected" : ""}>${status}</option>`)
+        .join("");
+    return `
+    <div class="select">
+        <select>
+            ${optionsHTML}
+        </select>
+        <span class="focus"></span>
+    </div>
+  `;
+}
+function updateDataIndexAttribute() {
+    let books = document.querySelectorAll(".book");
+    for (let [index, book] of books.entries()) {
+        book.setAttribute("data-index", String(index));
     }
-    dropdown.selectedIndex = readStatus ? 1 : 0;
-    dropdownContainer.appendChild(dropdown);
-    let spanFocus = document.createElement("span");
-    spanFocus.className = "focus";
-    dropdownContainer.appendChild(spanFocus);
-    return dropdownContainer;
+}
+// prettier-ignore
+function attachEventListenersToClass(className, eventType, eventHandler) {
+    const elements = document.querySelectorAll("." + className);
+    elements.forEach((element) => {
+        element.removeEventListener(eventType, eventHandler);
+        element.addEventListener(eventType, eventHandler);
+    });
+}
+function removeBookEventHandler(evt) {
+    removeBookFromList(evt);
 }
 function displayLibrary() {
-    var _a;
-    const fragment = document.createDocumentFragment();
-    for (let [index, book] of myLibrary.entries()) {
-        // if (checkRenderedBooks(book)) continue;
-        // prettier-ignore
-        let bookTemplate = (_a = document.querySelector(".book-template")) === null || _a === void 0 ? void 0 : _a.cloneNode(true);
-        let bookInfo = bookTemplate.querySelector(".book-info");
-        let fields = bookInfo.children;
-        bookTemplate.className = "book";
-        bookTemplate.setAttribute("data-index", String(index));
-        for (let child of fields) {
-            let className = child.className;
-            switch (className) {
-                case "title":
-                    child.textContent = book.title;
-                    break;
-                case "author":
-                    child.textContent = book.author;
-                    break;
-                case "pages":
-                    child.textContent = String(book.pages);
-                    break;
-                case "read":
-                    bookInfo.replaceChild(getDropdownWidget(book.read), child);
-                    break;
-            }
+    myLibrary.forEach((book, index) => {
+        if (!checkRenderedBooks(book)) {
+            const bookCardHTML = createBookCard(book, index);
+            main.insertAdjacentHTML("beforeend", bookCardHTML);
         }
-        main.innerHTML = "";
-        fragment.appendChild(bookTemplate);
-    }
-    main.appendChild(fragment);
-    deleteBook = document.querySelectorAll(".delete-book");
-    deleteBook.forEach((button) => {
-        button.addEventListener("click", removeBookFromList);
     });
+    updateDataIndexAttribute();
+    attachEventListenersToClass("delete-book", "click", removeBookEventHandler);
+}
+function createBookCard(book, index) {
+    const readStatusDropdown = createSelectDropdownWidget(book.read);
+    return `
+    <div class="book" data-index="${index}">
+        <div class="book-info">
+            <div class="title">${book.title}</div>
+            <div class="author">${book.author}</div>
+            <div class="pages">${book.pages}</div>
+            ${readStatusDropdown}
+        </div>
+        <button class="delete-book">x</button>
+    `;
 }
 function checkRenderedBooks(book) {
     for (let bookContainer of main.children) {
@@ -124,7 +126,7 @@ class Book {
     }
 }
 /*
-    Initial start-up
+    Initial library
  */
 const theHobbit = new Book("The Hobbit", "J.R.R. Tolkien", 295, false);
 const theStranger = new Book("The Stranger", "Albert Camus", 125, true);
